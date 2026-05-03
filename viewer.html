@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>High-Res VDO Pan/Zoom Viewer</title>
+    <style>
+        :root { --bg-color: #000; --text-color: #fff; --accent-color: #3498db; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg-color); font-family: -apple-system, system-ui, sans-serif; }
+        
+        #wrapper { width: 100vw; height: 100vh; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+
+        /* Initial Tap-to-Start Overlay */
+        #overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); color: var(--text-color); display: flex;
+            align-items: center; justify-content: center; z-index: 100; cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        #panzoom-element { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; will-change: transform; }
+
+        iframe {
+            width: 100%; height: 100%; border: none;
+            pointer-events: none; /* Essential to let pan/zoom script catch gestures */
+        }
+
+        .controls-hint {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            color: rgba(255,255,255,0.4); font-size: 11px; text-transform: uppercase;
+            letter-spacing: 1.5px; pointer-events: none; z-index: 5;
+        }
+    </style>
+</head>
+<body>
+
+<div id="wrapper">
+    <div id="overlay" onclick="startStream()">
+        <div style="text-align: center;">
+            <div style="font-size: 40px; border: 1.5px solid #fff; border-radius: 50%; width: 70px; height: 70px; line-height: 72px; margin: 0 auto 20px; padding-left: 5px;">▶</div>
+            <p style="font-weight: 500; margin: 0;">INITIALIZE HIGH-RES STREAM</p>
+            <p id="room-info" style="font-size: 12px; opacity: 0.5; margin-top: 10px;"></p>
+        </div>
+    </div>
+
+    <div id="panzoom-element">
+        <iframe id="vdo-stream" src="about:blank" allow="autoplay; fullscreen; picture-in-picture"></iframe>
+    </div>
+    
+    <div class="controls-hint">Pinch or Scroll to Zoom • Drag to Pan</div>
+</div>
+
+<script src="https://unpkg.com/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+
+<script>
+    const iframe = document.getElementById('vdo-stream');
+    const overlay = document.getElementById('overlay');
+    const elem = document.getElementById('panzoom-element');
+
+    // 1. Parse current URL parameters to pass to VDO.ninja
+    const params = new URLSearchParams(window.location.search);
+    
+    // Display room info if present
+    if (params.has('room')) {
+        document.getElementById('room-info').innerText = `ROOM: ${params.get('room')}`;
+    }
+
+    // 2. Set high-resolution and behavior overrides
+    params.set('autoplay', '1');
+    params.set('cleanoutput', '1');
+    params.set('muted', '1');
+    params.set('background', '000000');
+    
+    // Crucial: Forces the stream to request full source resolution 
+    // regardless of the initial iframe container size.
+    params.set('scale', '100'); 
+    params.set('videobitrate', '15000'); 
+
+    const targetUrl = `https://vdo.ninja/?${params.toString()}`;
+
+    // 3. Initialize Panzoom logic
+    const panzoom = Panzoom(elem, {
+        maxScale: 12,
+        minScale: 1,
+        canvas: true,
+        step: 0.1,
+        contain: 'outside' // Prevents white edges when panned
+    });
+
+    // Handle mouse wheel zooming
+    elem.parentElement.addEventListener('wheel', panzoom.zoomWithWheel);
+
+    // 4. Start function triggered by user interaction
+    function startStream() {
+        iframe.src = targetUrl;
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+            overlay.style.display = 'none';
+        }, 300);
+    }
+</script>
+</body>
+</html>
