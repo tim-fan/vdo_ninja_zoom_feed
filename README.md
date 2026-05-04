@@ -1,10 +1,14 @@
 # VDO.ninja Pan/Zoom Viewer
 
+Goal: document cam style stream from smart phone that doesn't sacrifice image resolution (lower frame rate is OK). Provides convenient pan/zoom controls for zooming in on document. 
+
+Agentic output follows.
+
 A specialized WebRTC stream wrapper for VDO.ninja designed for high-precision inspection. This viewer bypasses standard UI constraints to provide hardware-accelerated pan and zoom capabilities, making it ideal for monitoring systems, remote technical assistance, or any use case requiring digital magnification of a live video feed.
 
 ## Live Access
 Viewer URL:
-https://[YOUR-GITHUB-USERNAME].github.io/[YOUR-REPO-NAME]/viewer.html
+[https://tim-fan.github.io/vdo_ninja_zoom_feed/viewer.html](https://tim-fan.github.io/vdo_ninja_zoom_feed/viewer.html)
 
 ## Usage & URL Parameters
 This viewer acts as a transparent proxy. It captures parameters from its own URL and injects them into the VDO.ninja iframe along with several performance-optimizing overrides.
