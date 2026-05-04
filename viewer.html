@@ -5,24 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>High-Res VDO Pan/Zoom Viewer</title>
     <style>
-        :root { --bg-color: #000; --text-color: #fff; --accent-color: #3498db; }
+        :root { --bg-color: #000; --text-color: #fff; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg-color); font-family: -apple-system, system-ui, sans-serif; }
         
-        #wrapper { width: 100vw; height: 100vh; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        /* Using absolute layout to ensure full coverage regardless of 100vh quirks */
+        #wrapper { position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; }
 
-        /* Initial Tap-to-Start Overlay */
         #overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); color: var(--text-color); display: flex;
-            align-items: center; justify-content: center; z-index: 100; cursor: pointer;
+            background: rgba(0,0,0,0.95); color: var(--text-color);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; cursor: pointer; border: none; outline: none;
             transition: opacity 0.3s ease;
         }
 
         #panzoom-element { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; will-change: transform; }
 
-        iframe {
-            width: 100%; height: 100%; border: none;
-            pointer-events: none; /* Essential to let pan/zoom script catch gestures */
+        iframe { width: 100%; height: 100%; border: none; pointer-events: none; }
+
+        .play-btn {
+            font-size: 40px; border: 1.5px solid #fff; border-radius: 50%; 
+            width: 70px; height: 70px; line-height: 72px; margin: 0 auto 20px; padding-left: 5px;
         }
 
         .controls-hint {
@@ -35,13 +38,13 @@
 <body>
 
 <div id="wrapper">
-    <div id="overlay" onclick="startStream()">
+    <button id="overlay">
         <div style="text-align: center;">
-            <div style="font-size: 40px; border: 1.5px solid #fff; border-radius: 50%; width: 70px; height: 70px; line-height: 72px; margin: 0 auto 20px; padding-left: 5px;">▶</div>
-            <p style="font-weight: 500; margin: 0;">INITIALIZE HIGH-RES STREAM</p>
-            <p id="room-info" style="font-size: 12px; opacity: 0.5; margin-top: 10px;"></p>
+            <div class="play-btn">▶</div>
+            <p style="font-weight: 500; margin: 0; color: white;">INITIALIZE HIGH-RES STREAM</p>
+            <p id="room-info" style="font-size: 12px; opacity: 0.5; margin-top: 10px; color: white;"></p>
         </div>
-    </div>
+    </button>
 
     <div id="panzoom-element">
         <iframe id="vdo-stream" src="about:blank" allow="autoplay; fullscreen; picture-in-picture"></iframe>
@@ -56,49 +59,55 @@
     const iframe = document.getElementById('vdo-stream');
     const overlay = document.getElementById('overlay');
     const elem = document.getElementById('panzoom-element');
+    let pz = null;
 
-    // 1. Parse current URL parameters to pass to VDO.ninja
     const params = new URLSearchParams(window.location.search);
-    
-    // Display room info if present
     if (params.has('room')) {
         document.getElementById('room-info').innerText = `ROOM: ${params.get('room')}`;
     }
 
-    // 2. Set high-resolution and behavior overrides
+    // Set high-res overrides
     params.set('autoplay', '1');
     params.set('cleanoutput', '1');
     params.set('muted', '1');
     params.set('background', '000000');
-    
-    // Crucial: Forces the stream to request full source resolution 
-    // regardless of the initial iframe container size.
     params.set('scale', '100'); 
     params.set('videobitrate', '15000'); 
 
     const targetUrl = `https://vdo.ninja/?${params.toString()}`;
 
-    // 3. Initialize Panzoom logic
-    const pz = panzoom(elem, {
-        maxZoom: 12,
-        minZoom: 1,
-        zoomSpeed: 2,    // 2x the default speed (default is 1)
-        pinchSpeed: 2,   // 2x pinch-to-zoom speed on mobile
-        bounds: true,
-        boundsPadding: 0
-    });
-
-    // Handle mouse wheel zooming
-    elem.parentElement.addEventListener('wheel', e => pz.zoomWithWheel(e));
-
-    // 4. Start function triggered by user interaction
     function startStream() {
+        console.log("Starting Stream...");
         iframe.src = targetUrl;
         overlay.style.opacity = '0';
+        
+        // Initialize Panzoom only after the overlay is cleared
+        if (!pz) {
+            pz = panzoom(elem, {
+                maxZoom: 12,
+                minZoom: 1,
+                zoomSpeed: 0.1,  // Note: anvaka/panzoom uses decimals for speed (default ~0.065)
+                pinchSpeed: 2,
+                bounds: true,
+                boundsPadding: 0
+            });
+
+            // Handle desktop wheel
+            elem.parentElement.addEventListener('wheel', e => pz.zoomWithWheel(e));
+        }
+
         setTimeout(() => {
             overlay.style.display = 'none';
         }, 300);
     }
+
+    // Add multiple event listeners for maximum mobile compatibility
+    overlay.addEventListener('click', startStream);
+    overlay.addEventListener('touchstart', (e) => {
+        // Prevent event ghosting/double firing
+        e.preventDefault(); 
+        startStream();
+    }, { passive: false });
 </script>
 </body>
 </html>

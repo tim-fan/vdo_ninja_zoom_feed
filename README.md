@@ -1,6 +1,6 @@
 # VDO.ninja Pan/Zoom Viewer
 
-Goal: document cam style stream from smart phone that doesn't sacrifice image resolution (lower frame rate is OK). Provides convenient pan/zoom controls for zooming in on document. 
+Goal: document-cam style video stream from smart phone that doesn't sacrifice image resolution (lower frame rate is OK). Provides convenient pan/zoom controls for zooming in on document. 
 
 Agentic output follows.
 
