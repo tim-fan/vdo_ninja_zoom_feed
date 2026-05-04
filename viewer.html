@@ -79,7 +79,7 @@
     const targetUrl = `https://vdo.ninja/?${params.toString()}`;
 
     // 3. Initialize Panzoom logic
-    const panzoom = panzoomLib(elem, {
+    const pz = panzoom(elem, {
         maxZoom: 12,
         minZoom: 1,
         zoomSpeed: 2,    // 2x the default speed (default is 1)
@@ -89,7 +89,7 @@
     });
 
     // Handle mouse wheel zooming
-    elem.parentElement.addEventListener('wheel', e => panzoom.zoomWithWheel(e));
+    elem.parentElement.addEventListener('wheel', e => pz.zoomWithWheel(e));
 
     // 4. Start function triggered by user interaction
     function startStream() {
