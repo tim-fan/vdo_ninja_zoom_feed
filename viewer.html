@@ -50,7 +50,7 @@
     <div class="controls-hint">Pinch or Scroll to Zoom • Drag to Pan</div>
 </div>
 
-<script src="https://unpkg.com/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+<script src="https://unpkg.com/panzoom@9.4.4/dist/panzoom.min.js"></script>
 
 <script>
     const iframe = document.getElementById('vdo-stream');
@@ -79,16 +79,17 @@
     const targetUrl = `https://vdo.ninja/?${params.toString()}`;
 
     // 3. Initialize Panzoom logic
-    const panzoom = Panzoom(elem, {
-        maxScale: 12,
-        minScale: 1,
-        canvas: true,
-        step: 0.1,
-        contain: 'outside' // Prevents white edges when panned
+    const panzoom = panzoomLib(elem, {
+        maxZoom: 12,
+        minZoom: 1,
+        zoomSpeed: 2,    // 2x the default speed (default is 1)
+        pinchSpeed: 2,   // 2x pinch-to-zoom speed on mobile
+        bounds: true,
+        boundsPadding: 0
     });
 
     // Handle mouse wheel zooming
-    elem.parentElement.addEventListener('wheel', panzoom.zoomWithWheel);
+    elem.parentElement.addEventListener('wheel', e => panzoom.zoomWithWheel(e));
 
     // 4. Start function triggered by user interaction
     function startStream() {
